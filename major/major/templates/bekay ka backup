@@ -1,0 +1,126 @@
+from django.shortcuts import render
+import MySQLdb
+import json
+import time
+from date_range import *
+from dateparser import parse
+
+
+def getDBobject():
+	db = MySQLdb.connect(host="localhost",user="root",passwd="9163",db="major")
+	return db
+	
+def index(request):
+	start_time = time.clock()
+	db = getDBobject()
+	cursor = db.cursor()
+	sql = "SELECT DISTINCT(subject) AS Diseases FROM disease;"
+	cursor.execute(sql)
+	rows = cursor.fetchall()
+	sql = "SELECT name,lat,lon FROM disease;"
+	cursor.execute(sql)
+	map_val = cursor.fetchall()
+	row_count = cursor.rowcount
+	map_list = list()
+
+	for i in xrange(0,row_count):	
+		map_list.append(list(map_val[i]))
+	for i in xrange(0,row_count):
+		map_list[i][0] = str(map_list[i][0])
+		map_list[i][1] = float(map_list[i][1])
+		map_list[i][2] = float(map_list[i][2])
+#	print map_list
+#	map_list = json.dumps(map_list)
+#	print map_list
+
+	end_time = time.clock()
+	time_taken = end_time-start_time
+	return render(request,'index.html',{'rows':rows,'map_val':map_list,'time_taken':time_taken})
+	
+def disease_select(request):
+	if request.method == "GET":
+		db = getDBobject()
+		cursor = db.cursor()
+		start_time = time.clock()
+		values = request.GET.getlist("diseases")
+		tree = request.GET.get("tree")
+		print tree
+		print values[0]
+		sql = "SELECT name,lat,lon FROM disease WHERE subject IN (";
+		temp = ""
+		for i in values:
+			temp = temp + "'"+ i + "',"
+		temp = temp[:-1]
+		
+		print temp
+		sql = sql + temp + ");"
+		
+			
+		print sql
+		
+		cursor.execute(sql)
+		map_val = cursor.fetchall()
+		row_count = cursor.rowcount
+		map_list = list()
+		
+		for i in xrange(0,row_count):
+			map_list.append(list(map_val[i]))
+		for i in xrange(0,row_count):
+			map_list[i][0] = str(map_list[i][0])
+			map_list[i][1] = float(map_list[i][1])
+			map_list[i][2] = float(map_list[i][2])
+		end_time = time.clock()
+		time_taken = end_time-start_time
+		return render(request,'disease_select.html',{'values':values,'map_val':map_list,'time_taken':time_taken})
+	else:
+		db = getDBobject()
+		cursor = db.cursor()
+		sql = "SELECT DISTINCT(subject) AS Diseases FROM disease;"
+		cursor.execute(sql)
+		rows = cursor.fetchall()
+		return render(request,'index.html',{'rows':rows})
+		
+		
+		
+		
+def date_range(request):
+	if request.method=="GET":
+		db = getDBobject()
+		cursor = db.cursor()
+		from_date = request.GET.get("from")
+		to_date = request.GET.get("to") 
+
+#		from_date = dateparser.date(from_date)
+#		to_date = dateparser.date(to_date)
+		
+		print from_date[0]
+"""		
+		sql = "SELECT subject,lat,lon,name,date FROM disease";
+		cursor.execute(sql)
+		map_val = cursor.fetchall()
+		row_count = cursor.rowcount
+		map_list = list()
+		
+		for i in xrange(0,row_count):
+			map_list.append(list(map_val[i]))
+		for i in xrange(0,row_count):
+			map_list[i][0] = str(map_list[i][0])
+			map_list[i][1] = float(map_list[i][1])
+			map_list[i][2] = float(map_list[i][2])
+			map_list[i][3] = str(map_list[i][3])
+		time_taken = 0 
+"""
+		segment_tree(from_date,to_date)
+		sql = "SELECT DISTINCT(subject) AS Diseases FROM disease;"
+		cursor.execute(sql)
+		rows = cursor.fetchall()
+		return render(request,{'rows':rows,'time_taken':time_taken})
+		
+	else:
+		db = getDBobject()
+		cursor = db.cursor()
+		sql = "SELECT DISTINCT(subject) AS Diseases FROM disease;"
+		cursor.execute(sql)
+		rows = cursor.fetchall()
+		return render(request,'index.html',{'rows':rows})
+	

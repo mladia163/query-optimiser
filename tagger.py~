@@ -1,0 +1,5 @@
+from nltk import pos_tag, word_tokenize
+import nltk
+
+text = word_tokenize("And now for something completely different")
+nltk.pos_tag(text)

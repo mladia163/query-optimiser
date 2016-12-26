@@ -1,0 +1,28 @@
+import MySQLdb
+
+
+db = MySQLdb.connect (host = "localhost",
+                              user = "root",
+                              passwd = "9163",
+                              db = "major")
+                              
+                      
+cursor = db.cursor()
+
+#sql = """CREATE TABLE try1 ( 
+#tex TEXT, 
+#data TEXT
+#);"""
+
+#cursor.execute (sql)
+a = '"mayank1"'
+b = '"ladia"'
+
+sql_command = """INSERT INTO try1 VALUES ("""+a+""", """+b+""");"""
+print sql_command        
+
+cursor.execute(sql_command)
+
+db.commit()
+cursor.close()
+db.close()
